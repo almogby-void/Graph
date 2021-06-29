@@ -6,15 +6,15 @@
  * @author almog
  *
  */
-public class Pair<U, V> {
-	private final U first; // the first field of a pair
-	private final V second; // the second field of a pair
+public class Pair {
+	private final int first;
+	private final int second;
 
 	/**
 	 * @param first
 	 * @param second
 	 */
-	public Pair(U first, V second) {
+	public Pair(int first, int second) {
 		this.first = first;
 		this.second = second;
 	}
@@ -22,14 +22,14 @@ public class Pair<U, V> {
 	/**
 	 * @return the first
 	 */
-	public U getFirst() {
+	public int getFirst() {
 		return this.first;
 	}
 
 	/**
 	 * @return the second
 	 */
-	public V getSecond() {
+	public int getSecond() {
 		return this.second;
 	}
 
@@ -37,8 +37,8 @@ public class Pair<U, V> {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((this.first == null) ? 0 : this.first.hashCode());
-		result = prime * result + ((this.second == null) ? 0 : this.second.hashCode());
+		result = prime * result + this.first;
+		result = prime * result + this.second;
 		return result;
 	}
 
@@ -50,16 +50,10 @@ public class Pair<U, V> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Pair<?, ?> other = (Pair<?, ?>) obj;
-		if (this.first == null) {
-			if (other.first != null)
-				return false;
-		} else if (!this.first.equals(other.first))
+		Pair other = (Pair) obj;
+		if (this.first != other.first)
 			return false;
-		if (this.second == null) {
-			if (other.second != null)
-				return false;
-		} else if (!this.second.equals(other.second))
+		if (this.second != other.second)
 			return false;
 		return true;
 	}
