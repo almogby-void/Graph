@@ -1,3 +1,9 @@
+import java.util.Random;
+
+/**
+ * @author almog
+ *
+ */
 /*
 You must NOT change the signatures of classes/methods in this skeleton file.
 You are required to implement the methods of this skeleton file according to the requirements.
@@ -16,7 +22,7 @@ public class Graph {
      *
      * @param nodes - an array of node objects
      */
-    public Graph(Node [] nodes){
+    public Graph(Node [] nodes) {
         //TODO: implement this method.
     }
 
@@ -25,7 +31,7 @@ public class Graph {
      * Note: nodes that have been removed from the graph using deleteNode are no longer in the graph.
      * @return a Node object representing the correct node. If there is no node in the graph, returns 'null'.
      */
-    public Node maxNeighborhoodWeight(){
+    public Node maxNeighborhoodWeight() {
         //TODO: implement this method.
         return null;
     }
@@ -37,7 +43,7 @@ public class Graph {
      * @return the neighborhood weight of the node of id 'node_id' if such a node exists in the graph.
      * Otherwise, the function returns -1.
      */
-    public int getNeighborhoodWeight(int node_id){
+    public int getNeighborhoodWeight(int node_id) {
         //TODO: implement this method.
         return 0;
     }
@@ -52,7 +58,7 @@ public class Graph {
      * @param node2_id - the id of the second node.
      * @return returns 'true' if the function added an edge, otherwise returns 'false'.
      */
-    public boolean addEdge(int node1_id, int node2_id){
+    public boolean addEdge(int node1_id, int node2_id) {
         //TODO: implement this method.
         return false;
     }
@@ -63,7 +69,7 @@ public class Graph {
      * @param node_id - the id of the node to delete.
      * @return returns 'true' if the function deleted a node, otherwise returns 'false'
      */
-    public boolean deleteNode(int node_id){
+    public boolean deleteNode(int node_id) {
         //TODO: implement this method.
         return false;
     }
@@ -72,7 +78,7 @@ public class Graph {
 	 * Returns the number of nodes currently in the graph.
 	 * @return the number of nodes in the graph.
 	 */
-	public int getNumNodes(){
+	public int getNumNodes() {
 		//TODO: implement this method.
 		return 0;
 	}
@@ -81,7 +87,7 @@ public class Graph {
 	 * Returns the number of edges currently in the graph.
 	 * @return the number of edges currently in the graph.
 	 */
-	public int getNumEdges(){
+	public int getNumEdges() {
 		//TODO: implement this method.
 		return 0;
 	}
@@ -89,34 +95,35 @@ public class Graph {
     /**
      * This class represents a node in the graph.
      */
-    public static class Node{
-        /**
-         * Creates a new node object, given its id and its weight.
-         * @param id - the id of the node.
-         * @param weight - the weight of the node.
-         */
-        public Node(int id, int weight){
-            //TODO: implement this method.
-            return;
-        }
+    public static class Node {
+    	private final int id;
+    	private final int weight;
 
         /**
+		 * Creates a new node object, given its id and its weight.
+         * @param id – the id of the node.
+		 * @param weight – the weight of the node.
+		 */
+		public Node(int id, int weight) {
+			this.id = id;
+			this.weight = weight;
+		}
+
+		/**
          * Returns the id of the node.
          * @return the id of the node.
-         */
-        public int getId(){
-            //TODO: implement this method.
-            return 0;
-        }
+		 */
+		public int getId() {
+			return this.id;
+		}
 
-        /**
+		/**
          * Returns the weight of the node.
          * @return the weight of the node.
-         */
-        public int getWeight(){
-            //TODO: implement this method.
-            return 0;
-        }
+		 */
+		public int getWeight() {
+			return this.weight;
+		}
     }
 }
 
