@@ -34,14 +34,14 @@ public class Graph {
     	Node node;
     	HashNode hashNode;
     	this.graph = new GraphNode[N];
-    	this.table = new Hashtable((int) 2.5 * N);
+    	this.table = new Hashtable((int) 2.5 * N); // Θ(N).
     	HeapNode[] heapArray = new HeapNode[N];
-    	for (int i = 0; i < N; i++) {
+    	for (int i = 0; i < N; i++) { // Θ(N) on average.
     		node = nodes[i];
     		this.graph[i] = new GraphNode(i, node);
     		heapArray[i] = new HeapNode(node.getWeight(), node.getId(), i);
     		hashNode = new HashNode(node.getId(), heapArray[i], this.graph[i]);
-    		this.table.add(hashNode);
+    		this.table.add(hashNode); // Θ(1) on average.
     	}
     	this.maxHeap = new MaxHeap(heapArray);
     	this.num_nodes = N;
@@ -66,7 +66,6 @@ public class Graph {
      * <p>
      * Time Complexity: Θ(1).
      * @param node_id – an id of a node.
-     * @return the neighborhood weight of the node of id 'node_id' if such a node exists in the graph.
      * Otherwise, the function returns -1.
      */
     public int getNeighborhoodWeight(int node_id) {
@@ -81,6 +80,8 @@ public class Graph {
      * If one of these nodes is not in the graph, the function does nothing.
      * The two nodes must be distinct; otherwise, the function does nothing.
      * You may assume that if the two nodes are in the graph, there exists no edge between them prior to the call.
+     * <p>
+     * Average Time Complexity: Θ(log(n)).
      *
      * @param node1_id – the id of the first node.
      * @param node2_id – the id of the second node.
@@ -89,8 +90,8 @@ public class Graph {
     public boolean addEdge(int node1_id, int node2_id) {
     	if (node1_id == node2_id)
     		return false;
-        HashNode hNode1 = this.table.get(node1_id);
-        HashNode hNode2 = this.table.get(node2_id);
+        HashNode hNode1 = this.table.get(node1_id); // Θ(1) on average.
+        HashNode hNode2 = this.table.get(node2_id); // Θ(1) on average.
         if ((hNode1 == null) || (hNode2 == null))
         	return false;
         GraphNode gNode1 = hNode1.getGraphNode();
@@ -100,38 +101,40 @@ public class Graph {
         neighbor1.setNeighbor(new DLLNode<NeighborNode>(neighbor2));
         gNode1.getNeighbors().insertFirst(neighbor2);
         gNode2.getNeighbors().insertFirst(neighbor1);
-        this.maxHeap.increaseKey(hNode1.getHeapNode().getIndex(), gNode2.getWeight());
-        this.maxHeap.increaseKey(hNode2.getHeapNode().getIndex(), gNode1.getWeight());
+        this.maxHeap.increaseKey(hNode1.getHeapNode().getIndex(), gNode2.getWeight()); // Θ(log(n)) in W.C.
+        this.maxHeap.increaseKey(hNode2.getHeapNode().getIndex(), gNode1.getWeight()); // Θ(log(n)) in W.C.
     	this.num_edges++;
         return true;
     }
 
     /**
      * Given the id of a node in the graph, deletes the node of that id from the graph, if it exists.
+     * <p>
+     * Average Time Complexity: Θ((deg(Node) + 1)log(n)).
      *
      * @param node_id – the id of the node to delete.
      * @return returns 'true' if the function deleted a node, otherwise returns 'false'
      */
     public boolean deleteNode(int node_id) {
-        HashNode hashNode = this.table.get(node_id);
+        HashNode hashNode = this.table.get(node_id); // Θ(1) on average.
         if (hashNode == null)
         	return false;
-        this.table.remove(hashNode);
-        this.maxHeap.delete(hashNode.getHeapNode().getIndex());
+        this.table.remove(hashNode); // Θ(1) on average.
+        this.maxHeap.delete(hashNode.getHeapNode().getIndex()); // Θ(log(n)) in W.C.
         GraphNode gNode = hashNode.getGraphNode();
         int weight = gNode.getWeight(), pos;
         DLLNode<NeighborNode> listNode = gNode.getNeighbors().getFirst(), tmp;
         NeighborNode neighbor;
         GraphNode gNeighbor;
-        while (listNode != null) {
+        while (listNode != null) { // Θ(deg(Node) + 1) in W.C.
         	neighbor = listNode.getData();
         	gNeighbor = neighbor.getNeighborData();
-        	gNeighbor.getNeighbors().delete(listNode);
-        	pos = this.table.get(gNeighbor.getId()).getHeapNode().getIndex();
-        	this.maxHeap.decreaseKey(pos, weight);
+        	gNeighbor.getNeighbors().delete(listNode); // Θ(1).
+        	pos = this.table.get(gNeighbor.getId()).getHeapNode().getIndex(); // Θ(1) on average.
+        	this.maxHeap.decreaseKey(pos, weight); // Θ(log(n)) in W.C.
         	tmp = listNode;
         	listNode = tmp.getNext();
-        	gNode.getNeighbors().delete(listNode);
+        	gNode.getNeighbors().delete(listNode); // Θ(1).
         	this.num_edges--;
         }
         this.graph[gNode.getIndex()] = null;
@@ -199,27 +202,9 @@ public class Graph {
 		}
     }
     
-    public class HashFunction {
-    	private final int prime;
-    	private int a, b, m;
-    	    	
-    	/**
-    	 * @param prime – the prime number.
-		 * @param m – the size of the hashtable.
-		 */
-		public HashFunction(int prime, int m) {
-			Random rand = new Random();
-			this.prime = prime;
-			this.a = rand.nextInt(this.prime - 1) + 1;
-			this.b = rand.nextInt(this.prime);
-			this.m = m;
-		}
-
-		public int hash(int x) {
-			return ((int) Math.floorMod(1L * this.a * x + this.b, this.prime)) % this.m;
-    	}
-    }
-    
+    /**
+     * This class represents a hash table chaining with DLL and universal hashing.
+     */
     public class Hashtable {
     	private final int prime = (int) (Math.pow(10, 9) + 9);
     	private DoublyLinkedList<HashNode>[] arr;
@@ -227,6 +212,9 @@ public class Graph {
     	private int size;
     	
 		/**
+         * Constructs a hash table with DLL chaining and hash function.
+		 * <p>
+	     * Time Complexity: Θ(size).
 		 * @param size
 		 */
 		@SuppressWarnings("unchecked")
@@ -239,17 +227,33 @@ public class Graph {
 		}
 
 		/**
+         * Returns the size of the hash table.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the size
 		 */
 		public int getSize() {
 			return this.size;
 		}
 		
+		/**
+         * Returns the HashNode that corresponds to the id, if it exists.
+		 * <p>
+	     * Average Time Complexity: Θ(1).
+		 * @param node_id
+		 * @return the HashNode that corresponds to the id.
+		 */
 		public HashNode get(int node_id) {
 			int pos = this.hashFunc.hash(node_id);
 			return this.arr[pos].get(node_id).getData();
 		}
 		
+		/**
+         * Adds the HashNode to the hash table.
+		 * <p>
+	     * Average Time Complexity: Θ(1).
+		 * @param hashNode
+		 */
 		public void add(HashNode hashNode) {
 			int node_id = hashNode.getId();
 			int pos = this.hashFunc.hash(node_id);
@@ -259,6 +263,12 @@ public class Graph {
 			}
 		}
 		
+		/**
+         * Removes the HashNode from the hash table, if it exists.
+		 * <p>
+	     * Average Time Complexity: Θ(1).
+		 * @param hashNode
+		 */
 		public void remove(HashNode hashNode) {
 			int node_id = hashNode.getId();
 			int pos = this.hashFunc.hash(node_id);
@@ -268,13 +278,56 @@ public class Graph {
 				this.size--;
 			}
 		}
+	    
+	    /**
+	     * This class represents a hash function for the hash table.
+	     */
+	    public class HashFunction {
+	    	private final int prime;
+	    	private int a, b, m;
+	    	    	
+	    	/**
+	         * Constructs a hash function of the form (ax + b) % p.
+			 * <p>
+		     * Time Complexity: Θ(1).
+	    	 * @param prime – the prime number.
+			 * @param m – the size of the hash table.
+			 */
+			public HashFunction(int prime, int m) {
+				Random rand = new Random();
+				this.prime = prime;
+				this.a = rand.nextInt(this.prime - 1) + 1;
+				this.b = rand.nextInt(this.prime);
+				this.m = m;
+			}
+
+	    	/**
+	         * Returns the hash code value for x.
+			 * <p>
+		     * Time Complexity: Θ(1).
+	    	 * @param x – the key.
+	    	 * @return the hash code value for x.
+			 */
+			public int hash(int x) {
+				return ((int) Math.floorMod(1L * this.a * x + this.b, this.prime)) % this.m;
+	    	}
+	    }
     }
     
+    /**
+     * This class represents a Generic Doubly‐Linked List.
+     */
     public class DoublyLinkedList<K> {
     	private DLLNode<K> first = null;
     	private DLLNode<K> last = null;
     	private int length;
 		
+		/**
+         * Inserts the DLLNode‐wrapped data of type K as the first term.
+		 * <p>
+	     * Time Complexity: Θ(1).
+		 * @param data
+		 */
 		public void insertFirst(K data) {
 			DLLNode<K> node = new DLLNode<>(data);
 			node.setNext(this.first);
@@ -287,7 +340,11 @@ public class Graph {
 		}
 		
 		/**
-		 * @return the first
+         * Returns the DLLNode that corresponds to the id, if it exists.
+		 * <p>
+	     * Time Complexity: Θ(length).
+		 * @param node_id
+		 * @return the DLLNode that corresponds to the id.
 		 */
 		public DLLNode<K> get(int node_id) {
 			DLLNode<K> cur = this.first;
@@ -299,6 +356,12 @@ public class Graph {
 			return null;
 		}
 
+		/**
+         * Removes the DLLNode of type K from the DLL.
+		 * <p>
+	     * Time Complexity: Θ(1).
+		 * @param node
+		 */
 		public void delete(DLLNode<K> node) {
 			if (this.first == node) {
 				this.first = node.getNext();
@@ -319,6 +382,9 @@ public class Graph {
 		}
 
 		/**
+         * Returns the first field.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the first
 		 */
 		public DLLNode<K> getFirst() {
@@ -326,19 +392,28 @@ public class Graph {
 		}
 
 		/**
+         * Returns the last field.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the last
 		 */
 		public DLLNode<K> getLast() {
 			return this.last;
 		}
     }
-
+    
+    /**
+     * This class represents a node for the Generic Doubly‐Linked List.
+     */
 	public class DLLNode<K> {
 		private DLLNode<K> prev = null;
     	private DLLNode<K> next = null;
     	private K data;
     	
 		/**
+         * Constructs a DLLNode with data of type K.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @param data
 		 */
 		public DLLNode(K data) {
@@ -346,6 +421,9 @@ public class Graph {
 		}
 
 		/**
+         * Returns the data of type K.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the data
 		 */
 		public K getData() {
@@ -353,6 +431,9 @@ public class Graph {
 		}
 
 		/**
+         * Returns the prev field.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the prev
 		 */
 		public DLLNode<K> getPrev() {
@@ -360,6 +441,9 @@ public class Graph {
 		}
 
 		/**
+         * Sets the prev field.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @param prev the prev to set
 		 */
 		public void setPrev(DLLNode<K> prev) {
@@ -367,6 +451,9 @@ public class Graph {
 		}
 
 		/**
+         * Returns the next field.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the next
 		 */
 		public DLLNode<K> getNext() {
@@ -374,6 +461,9 @@ public class Graph {
 		}
 
 		/**
+         * Sets the next field.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @param next the next to set
 		 */
 		public void setNext(DLLNode<K> next) {
@@ -382,14 +472,14 @@ public class Graph {
 	}
     
     /**
-     * This class represents a (binary) max heap.
+     * This class represents a (binary) Max Heap.
      */
     public class MaxHeap {
     	private HeapNode[] heap;
     	private int length; // number of nodes currently in the heap.
     	
 		/**
-         * Constructs a max heap out of array of HeapNodes.
+         * Constructs a Max Heap out of array of HeapNodes.
 		 * <p>
 	     * Time Complexity: O(N).
 		 * @param heap
@@ -413,7 +503,7 @@ public class Graph {
 		/**
          * Increases the key of heap[index] by inc.
 		 * <p>
-	     * Time Complexity: Θ(1).
+	     * Time Complexity: O(log(n)).
 		 * @param index
 		 * @param inc
 		 */
@@ -426,7 +516,7 @@ public class Graph {
 		/**
          * Decreases the key of heap[index] by dec.
 		 * <p>
-	     * Time Complexity: Θ(1).
+	     * Time Complexity: O(log(n)).
 		 * @param index
 		 * @param dec
 		 */
@@ -439,7 +529,7 @@ public class Graph {
 		/**
          * Deletes heap[index] from the heap.
 		 * <p>
-	     * Time Complexity: Θ(1).
+	     * Time Complexity: O(log(n)).
 		 * @param index
 		 */
 		public void delete(int index) {
@@ -453,18 +543,46 @@ public class Graph {
 				heapify_down(index);
 		}
 		
+		/**
+         * Returns the index of the left child.
+		 * <p>
+	     * Time Complexity: Θ(1).
+		 * @param parentIndex
+		 * @return the index of the left child.
+		 */
         private int getLeftChildIndex(int parentIndex) {
 		    return 2 * parentIndex + 1;
         }
 
+		/**
+         * Returns the index of the right child.
+		 * <p>
+	     * Time Complexity: Θ(1).
+		 * @param parentIndex
+		 * @return the index of the right child.
+		 */
         private int getRightChildIndex(int parentIndex) {
 		    return 2 * parentIndex + 2;
         }
 		
+		/**
+         * Returns the index of the parent.
+		 * <p>
+	     * Time Complexity: Θ(1).
+		 * @param childIndex
+		 * @return the index of the parent.
+		 */
         private int getParentIndex(int childIndex) {
         	return (childIndex - 1) / 2;
         }
 		
+		/**
+         * Swaps heap[index1] with heap[index2].
+		 * <p>
+	     * Time Complexity: Θ(1).
+		 * @param index1
+		 * @param index2
+		 */
         private void swap(int index1, int index2) {
 		    HeapNode tmp = this.heap[index1];
 		    this.heap[index1] = this.heap[index2];
@@ -473,6 +591,12 @@ public class Graph {
 		    this.heap[index2].index = index2;
         }
 		
+        /**
+         * Restores the heap property by comparing and possibly swapping a node with its parent.
+		 * <p>
+	     * Time Complexity: Θ(log(n)) in W.C.
+		 * @param index
+		 */
 		private void heapify_up(int index) {
 			int parentIndex = getParentIndex(index);
 			while ((index > 0) && (this.heap[index].getKey() > this.heap[parentIndex].getKey())) {
@@ -482,6 +606,12 @@ public class Graph {
 			}
 		}
 		
+        /**
+         * Restores the heap property by recursively comparing and possibly swapping a node with one of its children.
+		 * <p>
+	     * Time Complexity: Θ(log(n)) in W.C.
+		 * @param index
+		 */
 		private void heapify_down(int index) {
 			int leftIndex = getLeftChildIndex(index);
 			int rightIndex = getRightChildIndex(index);
@@ -500,19 +630,30 @@ public class Graph {
 			}
 		}
 		
+		/**
+         * Heapifies the array bottom‐up.
+		 * <p>
+	     * Time Complexity: Θ(length).
+		 */
 		public void arrayToMaxHeap() {
 			int last = this.length / 2;
-			for (int i = last; i > 0; i--)
+			for (int i = last; i >= 0; i--)
 				heapify_down(i);
 		}
     }
 	
+    /**
+     * This class represents a node for the Max Heap.
+     */
 	public class HeapNode {
-		private int key; // the neighborhood weight of the graph node.
+		private int key; // the neighborhood weight of the node in the graph.
 		private final int id; // the id of the graph node.
 		private int index; // index in heap array.
 		
 		/**
+		 * Constructs a HeapNode with a key, an id and an index.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @param key
 		 * @param id
 		 * @param index
@@ -524,6 +665,9 @@ public class Graph {
 		}
 
 		/**
+         * Returns the key of the node.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the key
 		 */
 		public int getKey() {
@@ -531,6 +675,9 @@ public class Graph {
 		}
 
 		/**
+         * Sets the key of the node.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @param key the key to set
 		 */
 		public void setKey(int key) {
@@ -538,6 +685,9 @@ public class Graph {
 		}
 
 		/**
+         * Returns the index of the node.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the index
 		 */
 		public int getIndex() {
@@ -545,6 +695,9 @@ public class Graph {
 		}
 
 		/**
+         * Sets the index of the node in the heap array.
+		 * <p>
+	     * Time Complexity: Θ(1).
 		 * @param index the index to set
 		 */
 		public void setIndex(int index) {
@@ -552,21 +705,28 @@ public class Graph {
 		}
 
 		/**
-		 * @return the id
+         * Returns the id of the node.
+		 * <p>
+	     * Time Complexity: Θ(1).
+		 * @return the id of the node
 		 */
 		public int getId() {
 			return this.id;
 		}
 	}
-    
-    public interface MyNode {}
 
+	/**
+     * This class represents a node for the Graph with adjacency DDL.
+     */
     public class GraphNode {
-    	private final int index;
+    	private final int index; // index of the node in the graph array.
     	private final Node node;
-    	private DoublyLinkedList<NeighborNode> neighbors;
+    	private DoublyLinkedList<NeighborNode> neighbors; // adjacency list.
     	
 		/**
+		 * Constructs a GraphNode with an index, a Node and a DLL.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @param index
 		 * @param node
 		 */
@@ -577,6 +737,9 @@ public class Graph {
 		}
 
 		/**
+		 * Returns the index.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the index
 		 */
 		public int getIndex() {
@@ -614,6 +777,9 @@ public class Graph {
 		}
 
 		/**
+		 * Returns the DLL neighbors.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the neighbors
 		 */
 		public DoublyLinkedList<NeighborNode> getNeighbors() {
@@ -621,12 +787,17 @@ public class Graph {
 		}
     }
     
-
-    public class NeighborNode implements MyNode {
+    /**
+     * This class represents a node for the adjacency list.
+     */
+    public class NeighborNode {
     	private DLLNode<NeighborNode> neighbor;
     	private final GraphNode neighborData;
 
 		/**
+		 * Constructs a NeighborNode with two pointers.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @param neighbor
 		 * @param neighborData
 		 */
@@ -636,6 +807,9 @@ public class Graph {
 		}
 
 		/**
+		 * Returns the DLLNode neighbor.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the neighbor
 		 */
 		public DLLNode<NeighborNode> getNeighbor() {
@@ -643,6 +817,9 @@ public class Graph {
 		}
 
 		/**
+		 * Sets the DLLNode neighbor.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @param neighbor the neighbor to set
 		 */
 		public void setNeighbor(DLLNode<NeighborNode> neighbor) {
@@ -650,6 +827,9 @@ public class Graph {
 		}
 
 		/**
+		 * Returns the graphNode neighborData.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the neighborData
 		 */
 		public GraphNode getNeighborData() {
@@ -657,12 +837,18 @@ public class Graph {
 		}
     }
 
-    public class HashNode implements MyNode {
+    /**
+     * This class represents a key–value for the DLL in the hash table.
+     */
+    public class HashNode {
     	private final int id;
     	private final HeapNode heapNode;
     	private final GraphNode graphNode;
     	
 		/**
+		 * Constructs a HashNode with id and two pointers.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @param id
 		 * @param heapNode
 		 * @param graphNode
@@ -674,6 +860,9 @@ public class Graph {
 		}
 
 		/**
+		 * Returns the id.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the id
 		 */
 		public int getId() {
@@ -681,6 +870,9 @@ public class Graph {
 		}
 
 		/**
+		 * Returns the heapNode.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the heapNode
 		 */
 		public HeapNode getHeapNode() {
@@ -688,6 +880,9 @@ public class Graph {
 		}
 
 		/**
+		 * Returns the graphNode.
+	     * <p>
+	     * Time Complexity: Θ(1).
 		 * @return the graphNode
 		 */
 		public GraphNode getGraphNode() {
