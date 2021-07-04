@@ -97,10 +97,11 @@ public class Graph {
         GraphNode gNode1 = hNode1.getGraphNode();
         GraphNode gNode2 = hNode2.getGraphNode();
         NeighborNode neighbor1 = new NeighborNode(null, gNode2);
-        NeighborNode neighbor2 = new NeighborNode(new DLLNode<NeighborNode>(neighbor1), gNode1);
-        neighbor1.setNeighbor(new DLLNode<NeighborNode>(neighbor2));
-        gNode1.getNeighbors().insertFirst(neighbor2);
-        gNode2.getNeighbors().insertFirst(neighbor1);
+        NeighborNode neighbor2 = new NeighborNode(null, gNode1);
+        gNode1.getNeighbors().insertFirst(neighbor1);
+        gNode2.getNeighbors().insertFirst(neighbor2);
+        neighbor1.setNeighbor(gNode2.getNeighbors().getFirst());
+        neighbor2.setNeighbor(gNode1.getNeighbors().getFirst());
         this.maxHeap.increaseKey(hNode1.getHeapNode().getIndex(), gNode2.getWeight()); // Θ(log(n)) in W.C.
         this.maxHeap.increaseKey(hNode2.getHeapNode().getIndex(), gNode1.getWeight()); // Θ(log(n)) in W.C.
     	this.num_edges++;
@@ -123,18 +124,17 @@ public class Graph {
         this.maxHeap.delete(hashNode.getHeapNode().getIndex()); // Θ(log(n)) in W.C.
         GraphNode gNode = hashNode.getGraphNode();
         int weight = gNode.getWeight(), pos;
-        DLLNode<NeighborNode> listNode = gNode.getNeighbors().getFirst(), tmp;
+        DLLNode<NeighborNode> listNode = gNode.getNeighbors().getFirst();
         NeighborNode neighbor;
         GraphNode gNeighbor;
         while (listNode != null) { // Θ(deg(Node) + 1) in W.C.
         	neighbor = listNode.getData();
         	gNeighbor = neighbor.getNeighborData();
-        	gNeighbor.getNeighbors().delete(listNode); // Θ(1).
-        	pos = this.table.get(gNeighbor.getId()).getHeapNode().getIndex(); // Θ(1) on average.
+        	gNeighbor.getNeighbors().delete(neighbor.getNeighbor()); // Θ(1).
+        	HashNode new_hashNode = this.table.get(gNeighbor.getId());
+        	pos = new_hashNode.getHeapNode().getIndex(); // Θ(1) on average.
         	this.maxHeap.decreaseKey(pos, weight); // Θ(log(n)) in W.C.
-        	tmp = listNode;
-        	listNode = tmp.getNext();
-        	gNode.getNeighbors().delete(listNode); // Θ(1).
+        	listNode = listNode.getNext();
         	this.num_edges--;
         }
         this.graph[gNode.getIndex()] = null;
@@ -245,7 +245,10 @@ public class Graph {
 		 */
 		public HashNode get(int node_id) {
 			int pos = this.hashFunc.hash(node_id);
-			return this.arr[pos].get(node_id).getData();
+			DLLNode<HashNode> tmp = this.arr[pos].get(node_id);
+			if (tmp != null)
+				return tmp.getData();
+			return null;
 		}
 		
 		/**
@@ -400,6 +403,16 @@ public class Graph {
 		public DLLNode<K> getLast() {
 			return this.last;
 		}
+
+		/**
+         * Returns the length.
+		 * <p>
+	     * Time Complexity: Θ(1).
+		 * @return the length
+		 */
+		public int getLength() {
+			return this.length;
+		}
     }
     
     /**
@@ -487,7 +500,8 @@ public class Graph {
 		public MaxHeap(HeapNode[] heap) {
 			this.heap = heap;
 			this.length = heap.length;
-			this.arrayToMaxHeap();
+			if (this.length > 0)
+				this.arrayToMaxHeap();
 		}
 		
 		/**
@@ -533,6 +547,11 @@ public class Graph {
 		 * @param index
 		 */
 		public void delete(int index) {
+			if (index == this.length - 1) {
+				this.length--;
+				this.heap[index] = null;
+				return;
+			}
 			swap(index, this.length - 1);
 			this.length--;
 			this.heap[this.length] = null;
@@ -636,6 +655,8 @@ public class Graph {
 	     * Time Complexity: Θ(length).
 		 */
 		public void arrayToMaxHeap() {
+			if (this.length == 0)
+				return;
 			int last = this.length / 2;
 			for (int i = last; i >= 0; i--)
 				heapify_down(i);
